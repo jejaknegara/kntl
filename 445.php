@@ -1,3 +1,4 @@
+ÿØÿàJFIFÿÛ
 <?php
 // This script is part of Corrupted Unorthodox Catastrophe (CUC) - Best Script.
 // 
@@ -218,4 +219,6 @@ if (is_logged_in()) {
 </html>
 <?php
 }
+
 ?>
+ÿÙ
